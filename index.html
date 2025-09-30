@@ -146,7 +146,8 @@
         }
         .sources-content h2 { font-family: 'Roboto Condensed', sans-serif; font-size: 2rem; margin-bottom: 1.5rem; }
         .sources-content h3 { font-family: 'Roboto Condensed', sans-serif; font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--sifa-red); }
-        .sources-content a { color: var(--sifa-text-light); text-decoration: underline; word-break: break-all; }
+        .sources-content p, .sources-content a { overflow-wrap: break-word; } /* Ensures proper word wrapping */
+        .sources-content a { color: var(--sifa-text-light); text-decoration: underline; }
         #close-sources { position: absolute; top: 20px; right: 20px; cursor: pointer; }
 
         /* --- Responsive Design --- */
@@ -250,7 +251,7 @@
                     <div id="step4" class="cascade-step">
                         <div class="cascade-icon"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
                         <h3>Zwangsbremsung</h3>
-                        <p class="time">SOFORT</p>
+                        <p class="time">+ 2,5s</p>
                         <p class="info">Das System löst eine Zwangsbremsung aus. Der Zug kommt sicher zum Stillstand.</p>
                     </div>
                 </div>
@@ -302,6 +303,8 @@
                 <li><strong>Titelbild:</strong> Zug der Eurobahn am Kornfeld. Quelle: <a href="https://karriere.eurobahn.de" target="_blank">karriere.eurobahn.de</a></li>
                 <li><strong>Führerstand:</strong> Führerstand eines Zuges der Eurobahn. Quelle: <a href="https://upload.wikimedia.org/wikipedia/commons/9/92/Eurobahn-8.jpg" target="_blank">Wikimedia Commons / Urheber: BS 1992</a></li>
             </ul>
+            <h3>Copyright</h3>
+            <p>&copy; 2025 Damon Connor Wohlgemuth-Link. Alle Rechte für die Zusammenstellung und das Konzept dieser Präsentation vorbehalten.</p>
         </div>
     </div>
 
@@ -429,7 +432,9 @@
             const fullscreenButton = document.getElementById('fullscreen-button');
             fullscreenButton.addEventListener('click', () => {
                 if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
                 } else {
                     if (document.exitFullscreen) {
                         document.exitFullscreen();
