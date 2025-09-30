@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Schulung: Sicherheitsfahrschaltung (Sifa)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sifa-red: #d80032;
+            --sifa-bg: #1f2937;
+            --sifa-text: #f3f4f6;
+            --sifa-text-light: #9ca3af;
+            --sifa-border: #4b5563;
+            --sifa-yellow: #f59e0b;
+            --sifa-green: #10b981;
+        }
+
+        /* --- Grundlegende Einrichtung --- */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--sifa-bg);
+            color: var(--sifa-text);
+        }
+
+        /* --- Container & Fortschrittsbalken --- */
+        #presentation-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 5px;
+            background-color: var(--sifa-red);
+            width: 0;
+            z-index: 100;
+            transition: width 0.3s ease-out;
+        }
+        
+        .image-source {
+            position: absolute;
+            bottom: 1rem;
+            right: 1.5rem;
+            font-size: 0.75rem;
+            color: var(--sifa-text-light);
+            background-color: rgba(0,0,0,0.5);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            z-index: 20;
+        }
+
+        /* --- Folien-Styling --- */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 3rem 5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(50px);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+            z-index: 10;
+        }
+        
+        .slide.exit {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+
+        /* --- Folienelemente --- */
+        .slide-title {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 3.25rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--sifa-text);
+            border-bottom: 3px solid var(--sifa-red);
+            padding-bottom: 0.75rem;
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        p, li {
+            font-size: 1.3rem;
+            line-height: 1.7;
+            max-width: 900px;
+        }
+        
+        ul {
+            list-style-type: disc;
+            padding-left: 2rem;
+            margin-top: 1.5rem;
+        }
+        
+        strong {
+            color: var(--sifa-red);
+            font-weight: 600;
+        }
+
+        /* --- Spezielle Folien-Layouts --- */
+        .title-slide {
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+        }
+        .title-slide::before {
+             content: '';
+             position: absolute;
+             top: 0; left: 0; right: 0; bottom: 0;
+             background: rgba(31, 41, 55, 0.6);
+             z-index: -1;
+        }
+        .title-slide .slide-title {
+            font-size: 4.5rem;
+            border: none;
+            color: white;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+        }
+        .title-slide .slide-subtitle {
+            font-size: 1.75rem;
+            color: var(--sifa-text-light);
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+        }
+
+        .split-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 4rem;
+            align-items: center;
+            width: 100%;
+            max-width: 1500px;
+        }
+        
+        .image-container {
+            background-color: #2d3748;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid var(--sifa-border);
+            max-height: 500px;
+        }
+        .slide-image {
+            width: 100%;
+            height: 100%;
+            max-height: 480px;
+            object-fit: contain;
+            border-radius: 0.25rem;
+        }
+        
+        /* --- Timeline-Styling für Warnkaskade --- */
+        .timeline-container {
+            width: 100%;
+            max-width: 1200px;
+        }
+        .timeline-bar {
+            display: flex;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--sifa-border);
+        }
+        .timeline-segment {
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+        .timeline-labels {
+            display: grid;
+            grid-template-columns: 5fr 1fr 1fr 1fr;
+            margin-top: 1rem;
+            gap: 1rem;
+        }
+        .timeline-card {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            background-color: #374151;
+            border: 1px solid var(--sifa-border);
+            opacity: 0.4;
+            transform: translateY(20px);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        .timeline-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .timeline-card h3 {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .timeline-card svg {
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="progress-bar"></div>
+    <div id="presentation-container">
+
+        <!-- Folie 1: Titel -->
+        <div id="slide1" class="slide title-slide active" style="background-image: url('https://karriere.eurobahn.de/fileadmin/_processed_/5/b/csm_erb_unna_hamm-44_036c17bf6b.jpg');">
+            <h1 class="slide-title">Sicherheitsfahrschaltung (Sifa)</h1>
+            <p class="slide-subtitle">Funktion, Aufbau und betriebliche Handhabung</p>
+            <div class="image-source">Quelle: eurobahn.de</div>
+        </div>
+
+        <!-- Folie 2: Einleitung -->
+        <div id="slide2" class="slide">
+            <div class="text-center">
+                <h2 class="slide-title">Grundlagen der Zugsicherung</h2>
+                <p>Moderne Schienenfahrzeuge sind mit redundanten Sicherheitssystemen ausgestattet. Die Sicherheitsfahrschaltung (Sifa) ist eine der fundamentalsten Ebenen dieser Systeme.</p>
+                <p class="mt-4">Ihre primäre Aufgabe ist die Überwachung der <strong>Dienst- und Handlungsfähigkeit</strong> des Triebfahrzeugführers (Tf), um Unfälle infolge menschlichen Ausfalls zu verhindern.</p>
+            </div>
+        </div>
+
+        <!-- Folie 3: Grundprinzip -->
+        <div id="slide3" class="slide">
+            <div class="split-layout">
+                <div>
+                    <h2 class="slide-title">Das Grundprinzip</h2>
+                    <p>Die Sifa basiert auf dem Prinzip der <strong>Wachsamkeitskontrolle</strong>. Das System fordert vom Tf eine periodische, bewusste Aktion, um seine Präsenz und Aufmerksamkeit zu bestätigen.</p>
+                    <p class="mt-4">Diese Interaktion belegt, dass der Tf in der Lage ist, das Fahrzeug sicher zu führen. Bleibt diese Bestätigung aus, leitet das System definierte Gegenmaßnahmen ein.</p>
+                </div>
+                <div class="image-container">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/92/Eurobahn-8.jpg" alt="Führerstand eines Zuges der Eurobahn" class="slide-image">
+                    <div class="image-source">Quelle: Wikimedia Commons / BS 1992</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Folie 4: Funktionsweise -->
+        <div id="slide4" class="slide">
+            <div class="text-center">
+                <h2 class="slide-title">Funktionsweise der Zeit-Sifa</h2>
+                <p>Im Regelbetrieb in Deutschland kommt die <strong>Zeit-Sifa</strong> zum Einsatz. Sie arbeitet mit einem festen Zeitintervall von <strong>30 Sekunden</strong>.</p>
+                <p class="mt-4">Der Tf muss innerhalb dieses Zeitfensters ein Sifa-Bedienelement betätigen. Typischerweise geschieht dies durch kurzes Loslassen und erneutes Betätigen. Jede erfolgreiche Bedienung setzt den 30-Sekunden-Zähler zurück.</p>
+            </div>
+        </div>
+        
+        <!-- Folie 5: Bedienelemente -->
+        <div id="slide5" class="slide">
+             <div class="split-layout">
+                <div class="image-container">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/29/DB-Baureihe_423_Fuehrerstand_Sifa-Pedal.jpg" alt="Ein Sifa-Pedal" class="slide-image">
+                    <div class="image-source">Quelle: Wikimedia Commons / High Contrast</div>
+                </div>
+                <div>
+                    <h2 class="slide-title">Bedienelemente</h2>
+                    <p>Um eine sichere und ergonomische Bedienung zu gewährleisten, sind verschiedene Bedienelemente vorhanden:</p>
+                    <ul>
+                        <li><strong>Fußtaster / Pedal:</strong> Das gängigste Element, wird dauerhaft oder periodisch mit dem Fuß betätigt.</li>
+                        <li><strong>Handtaster:</strong> An den Seitenfenstern, im Fahrpult oder direkt in den Fahrschaltern integriert.</li>
+                        <li><strong>Redundanz:</strong> Die mehrfache Ausführung stellt sicher, dass der Tf unabhängig von seiner Sitz- oder Arbeitsposition jederzeit eine Bedienung vornehmen kann.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Folie 6: Warnkaskade -->
+        <div id="slide6" class="slide">
+            <div class="timeline-container">
+                <h2 class="slide-title">Die Warnkaskade im Detail</h2>
+                <div class="timeline-bar">
+                    <div id="seg1" class="timeline-segment bg-green-500" style="width: 80%;"></div>
+                    <div id="seg2" class="timeline-segment bg-yellow-500" style="width: 6.6%;"></div>
+                    <div id="seg3" class="timeline-segment bg-orange-500" style="width: 6.6%;"></div>
+                    <div id="seg4" class="timeline-segment bg-red-600" style="width: 6.6%;"></div>
+                </div>
+                <div class="timeline-labels">
+                    <div id="card1" class="timeline-card col-span-2">
+                        <h3>
+                            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Normalbetrieb
+                        </h3>
+                        <p><strong>0 - 30 Sekunden:</strong> Der Tf bedient die Sifa periodisch. Es erfolgt keine Warnung.</p>
+                    </div>
+                    <div id="card2" class="timeline-card">
+                        <h3>
+                            <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            Optisch
+                        </h3>
+                        <p><strong>+ 2,5s:</strong> Leuchtmelder aktiv.</p>
+                    </div>
+                     <div id="card3" class="timeline-card">
+                        <h3>
+                             <svg class="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.636 5.636a9 9 0 0112.728 0m-12.728 0l12.728 12.728"></path></svg>
+                            Akustisch
+                        </h3>
+                        <p><strong>+ 2,5s:</strong> Warnton ertönt.</p>
+                    </div>
+                </div>
+                 <div id="card4" class="timeline-card mt-4 w-full">
+                     <h3>
+                         <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                         Stufe 3: Zwangsbremsung
+                     </h3>
+                     <p><strong>Nach weiteren ~2,5 Sekunden:</strong> Reagiert der Tf weiterhin nicht, wird die Hauptluftleitung (HLL) entlüftet. Dies führt zur Bremsung mit maximaler Kraft und bringt den Zug sicher zum Stillstand.</p>
+                 </div>
+            </div>
+        </div>
+        
+        <!-- Folie 7: Zusammenfassung -->
+        <div id="slide7" class="slide">
+            <div class="text-center">
+                <h2 class="slide-title">Zusammenfassung</h2>
+                <p>Die Sicherheitsfahrschaltung ist eine unverzichtbare Komponente der Zugsicherung. Sie stellt als passive Überwachungseinrichtung sicher, dass das Fahrzeug nur bei nachgewiesener Handlungsfähigkeit des Triebfahrzeugführers betrieben wird.</p>
+                <p class="mt-4">Das Verständnis ihrer Funktionsweise, der Bedienelemente und der Warnkaskade ist für jeden Triebfahrzeugführer von fundamentaler Bedeutung für den sicheren Eisenbahnbetrieb.</p>
+            </div>
+        </div>
+
+        <!-- Folie 8: Ende -->
+        <div id="slide8" class="slide">
+            <h2 class="slide-title">Ende der Schulungseinheit</h2>
+            <p class="text-xl mt-4">Fragen & Diskussion</p>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('presentation-container');
+            const progressBar = document.getElementById('progress-bar');
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            let currentSlide = 1;
+            let touchStartX = 0;
+            
+            // Timeline elements
+            const timelineCards = [
+                document.getElementById('card1'),
+                document.getElementById('card2'),
+                document.getElementById('card3'),
+                document.getElementById('card4')
+            ];
+
+            function updateProgressBar() {
+                const progress = (currentSlide - 1) / (totalSlides - 1) * 100;
+                progressBar.style.width = `${progress}%`;
+            }
+            
+            function animateTimeline() {
+                let delay = 0;
+                timelineCards.forEach(card => {
+                    if (card) {
+                        card.style.transitionDelay = `${delay}s`;
+                        card.classList.add('visible');
+                        delay += 0.2;
+                    }
+                });
+            }
+
+            function resetTimeline() {
+                 timelineCards.forEach(card => {
+                    if (card) {
+                        card.classList.remove('visible');
+                    }
+                });
+            }
+
+            function showSlide(slideNumber) {
+                slideNumber = Math.max(1, Math.min(totalSlides, slideNumber));
+                
+                const oldSlide = document.querySelector('.slide.active');
+                if (oldSlide && oldSlide.id === `slide${slideNumber}`) return;
+
+                if(oldSlide) {
+                    oldSlide.classList.remove('active');
+                    oldSlide.classList.add('exit');
+                }
+                
+                const newSlide = document.getElementById(`slide${slideNumber}`);
+                if (newSlide) {
+                     setTimeout(() => {
+                        slides.forEach(s => s.classList.remove('exit'));
+                        newSlide.classList.add('active');
+                        
+                        // Handle animations on specific slides
+                        if (newSlide.id === 'slide6') {
+                            animateTimeline();
+                        } else {
+                            resetTimeline();
+                        }
+
+                     }, 250);
+                }
+                
+                currentSlide = slideNumber;
+                updateProgressBar();
+            }
+
+            function nextSlide() { if (currentSlide < totalSlides) showSlide(currentSlide + 1); }
+            function prevSlide() { if (currentSlide > 1) showSlide(currentSlide - 1); }
+
+            container.addEventListener('click', (e) => {
+                if (e.clientX > window.innerWidth / 2) nextSlide();
+                else prevSlide();
+            });
+
+            container.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+            container.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                const swipeDistance = touchEndX - touchStartX;
+                if (Math.abs(swipeDistance) < 50) return; 
+                if (swipeDistance < 0) nextSlide();
+                else prevSlide();
+            }, { passive: true });
+
+             document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); } 
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+            });
+
+            updateProgressBar();
+        });
+    </script>
+</body>
+</html>
+
