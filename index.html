@@ -69,7 +69,7 @@
         .title-slide { background-size: cover; background-position: center; text-align: center; }
         .title-slide::before {
              content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-             background: rgba(31, 41, 55, 0.65); z-index: 1;
+             background: rgba(0, 0, 0, 0.6); z-index: 1; /* Darker overlay */
         }
         .title-slide > * { position: relative; z-index: 2; }
         .title-slide .slide-title { font-size: 4.5rem; border: none; color: white; text-shadow: 2px 2px 8px rgba(0,0,0,0.7); }
@@ -116,14 +116,21 @@
         .cascade-step.active.pulse .cascade-icon { animation: pulse 1s infinite; }
         .cascade-step.active.shake .cascade-icon { animation: shake 0.5s infinite; }
         
-        /* --- Sources Modal & Button --- */
-        #sources-button {
-            position: fixed; bottom: 20px; left: 20px; z-index: 101;
-            width: 50px; height: 50px; background-color: rgba(0,0,0,0.4);
-            border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        /* --- UI Buttons (Sources, Fullscreen) --- */
+        .ui-button {
+            position: fixed; z-index: 101; width: 50px; height: 50px;
+            background-color: rgba(0,0,0,0.4); border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: background-color 0.3s;
         }
-        #sources-button:hover { background-color: rgba(0,0,0,0.7); }
+        .ui-button:hover { background-color: rgba(0,0,0,0.7); }
+        #sources-button { bottom: 20px; left: 20px; }
+        #fullscreen-button { bottom: 20px; right: 20px; }
+        #fullscreen-button .icon-exit { display: none; }
+        body.fullscreen-active #fullscreen-button .icon-enter { display: none; }
+        body.fullscreen-active #fullscreen-button .icon-exit { display: block; }
+
+        /* --- Sources Modal --- */
         #sources-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 200; display: flex; align-items: center; justify-content: center;
@@ -210,7 +217,7 @@
                 <h2 class="slide-title">Bedienelemente</h2>
                 <ul class="list-disc pl-8">
                     <li><strong>Fußtaster / Pedal:</strong> Das gängigste Element, wird dauerhaft oder periodisch mit dem Fuß betätigt.</li>
-                    <li><strong>Handtaster:</strong> An den Seitenfenstern, im Fahrpult oder direkt in den Fahrsaltern integriert.</li>
+                    <li><strong>Handtaster:</strong> An den Seitenfenstern, im Fahrpult oder direkt in den Fahrschaltern integriert.</li>
                     <li><strong>Redundanz:</strong> Die mehrfache Ausführung stellt sicher, dass der Tf unabhängig von seiner Sitz- oder Arbeitsposition jederzeit eine Bedienung vornehmen kann.</li>
                 </ul>
             </div>
@@ -269,9 +276,13 @@
 
     </div>
 
-    <!-- Sources Button -->
-    <div id="sources-button" title="Quellen anzeigen">
+    <!-- UI Buttons -->
+    <div id="sources-button" class="ui-button" title="Quellen anzeigen">
         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    </div>
+    <div id="fullscreen-button" class="ui-button" title="Vollbildmodus">
+        <svg class="w-6 h-6 text-white icon-enter" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1v4m0 0h-4m4-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 1v-4m0 0h-4m4 4l-5-5"></path></svg>
+        <svg class="w-6 h-6 text-white icon-exit" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4H4v6m0-6l6 6m10 10h-6v-6m0 6l-6-6M10 20H4v-6m0 6l6-6m10-10h-6v6m0-6l-6 6"></path></svg>
     </div>
 
     <!-- Sources Modal -->
@@ -312,58 +323,50 @@
             function runCascadeAnimation() {
                 const progress = document.getElementById('timeline-progress');
                 const steps = document.querySelectorAll('.cascade-step');
-                const animationDuration = 8000; // 8 seconds
+                const animationDuration = 8000;
 
-                // Clear any previous animation timers
                 timelineAnimationTimeouts.forEach(clearTimeout);
                 timelineAnimationTimeouts = [];
                 
-                // Reset all elements to their initial state
                 steps.forEach(s => { 
                     s.classList.remove('active', 'pulse', 'shake');
                     s.querySelector('.cascade-icon').style.animation = 'none';
                 });
                 
                 progress.style.transition = 'none';
-                progress.style.backgroundColor = '#10b981'; // Green
+                progress.style.backgroundColor = '#10b981';
                 progress.style.width = '0%';
 
-                // Use a single timeout to start the whole sequence to ensure the reset is applied first
                 const startTimeout = setTimeout(() => {
-                    // Start the 8-second progress bar animation
                     progress.style.transition = `width ${animationDuration / 1000}s linear, background-color 1s ease`;
                     progress.style.width = '100%';
 
-                    // Schedule the activation of each step every 2 seconds
                     const timings = [0, 2000, 4000, 6000];
 
                     timings.forEach((time, index) => {
                         const timeout = setTimeout(() => {
-                            // Deactivate previous icon animations
-                            if(index > 1) {
+                            if(index > 0) {
                                 steps[index-1].classList.remove('pulse', 'shake');
                                 steps[index-1].querySelector('.cascade-icon').style.animation = 'none';
                             }
                             
-                            // Activate current step
                             steps[index].classList.add('active');
 
-                            // Add specific animations and change progress bar color
                             if(index === 1) {
                                 steps[index].classList.add('pulse');
                                 steps[index].querySelector('.cascade-icon').style.animation = 'pulse 1s infinite';
-                                progress.style.backgroundColor = '#f59e0b'; // Yellow
+                                progress.style.backgroundColor = '#f59e0b';
                             } else if (index === 2) {
                                 steps[index].classList.add('shake');
                                 steps[index].querySelector('.cascade-icon').style.animation = 'shake 0.5s infinite';
                             } else if (index === 3) {
-                                progress.style.backgroundColor = '#d80032'; // Red
+                                progress.style.backgroundColor = '#d80032';
                             }
                         }, time);
                         timelineAnimationTimeouts.push(timeout);
                     });
 
-                }, 100); // Small delay to allow CSS reset to render
+                }, 100);
                 timelineAnimationTimeouts.push(startTimeout);
             }
 
@@ -397,12 +400,12 @@
 
             // Navigation Events
             container.addEventListener('click', (e) => {
-                if (e.target.closest('#sources-button, #sources-modal')) return;
+                if (e.target.closest('.ui-button, #sources-modal')) return;
                 if (e.clientX > window.innerWidth / 2) nextSlide(); else prevSlide();
             });
             container.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
             container.addEventListener('touchend', (e) => {
-                if (e.target.closest('#sources-button, #sources-modal')) return;
+                if (e.target.closest('.ui-button, #sources-modal')) return;
                 const touchEndX = e.changedTouches[0].clientX;
                 const swipeDistance = touchEndX - touchStartX;
                 if (Math.abs(swipeDistance) < 50) return; 
@@ -420,6 +423,21 @@
             sourcesModal.addEventListener('click', (e) => {
                 if (e.target.closest('.sources-content')) return;
                 sourcesModal.classList.remove('visible');
+            });
+
+            // Fullscreen Events
+            const fullscreenButton = document.getElementById('fullscreen-button');
+            fullscreenButton.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+            document.addEventListener('fullscreenchange', () => {
+                document.body.classList.toggle('fullscreen-active', !!document.fullscreenElement);
             });
 
             // Initial setup
